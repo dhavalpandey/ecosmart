@@ -1,5 +1,5 @@
-0 Food
-1 Metal
-2 Plastic
-3 Plastic
-4 Paper
+0 food waste
+1 metal
+2 plastic
+3 plastic
+4 paper

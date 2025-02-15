@@ -12,7 +12,9 @@ Robotics Ecosmart Bin Project/
 ├── run.py // Main program for real-time object detection
 ├── test.py // Test script for evaluating the model on test images
 ├── model.tflite // TensorFlow Lite model file
-└── labels.txt // Labels file with class mappings
+├── labels.txt // Labels file with class mappings
+├── utils.py // Utility functions for model and image processing
+└── tray.py // Functions for tray rotation simulation
 
 ## Setup
 
@@ -35,7 +37,7 @@ Robotics Ecosmart Bin Project/
     The program opens the default camera using OpenCV.
 
 -   **Background Calibration:**  
-    The function calibrate_background() captures multiple frames over 30 seconds with an empty ROI:
+    The function `calibrate_background()` captures multiple frames over 30 seconds with an empty ROI:
     -   Each frame is blurred to reduce noise.
     -   A median background image is computed and then filtered using a bilateral filter to be used as a reference.
 
@@ -49,7 +51,7 @@ Robotics Ecosmart Bin Project/
 -   **Preprocessing:**
 
     -   The current ROI is blurred using a Gaussian filter.
-    -   The align_roi() function aligns the current ROI with the calibrated background.
+    -   The `align_roi()` function aligns the current ROI with the calibrated background.
 
 -   **Change Detection:**
     -   A difference image is computed between the aligned frame and the background.
@@ -60,13 +62,22 @@ Robotics Ecosmart Bin Project/
 ### 3. Accumulation and Prediction
 
 -   **Frame Accumulation:**
+
     -   After detecting a stable object (after a 5-second cooldown), the detected region is extracted and resized consistently.
-    -   Several frames (as determined by ACCUM_COUNT) are accumulated to form a robust median ROI.
+    -   Several frames (as determined by `ACCUM_COUNT`) are accumulated to form a robust median ROI.
+
 -   **Classification:**
-    -   Once enough frames are collected, the median ROI is computed and passed into the TensorFlow Lite model via predict_frame().
+    -   Once enough frames are collected, the median ROI is computed and passed into the TensorFlow Lite model via `predict_frame()`.
     -   The predicted object category and its confidence are displayed on the camera view.
 
-### 4. User Interaction
+### 4. Tray Rotation Simulation
+
+-   **Tray Rotation:**
+    -   When an object is confirmed, the `simulate_tray_rotation()` function is called.
+    -   The function calculates the shortest path between compartments using a graph and simulates the tray rotation.
+    -   During rotation, detection is disabled, and messages are displayed on the camera view.
+
+### 5. User Interaction
 
 -   **Real-Time Feedback:**  
     The live camera view shows:
@@ -80,7 +91,7 @@ Robotics Ecosmart Bin Project/
 
 ## Testing
 
-A separate script (test.py) is provided under src/:
+A separate script (test.py) is provided under src/tests/:
 
 -   It processes a collection of test images, applies similar preprocessing, and then uses the model to predict object categories.
 -   Test performance (such as accuracy) is computed from the results.

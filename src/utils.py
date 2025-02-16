@@ -7,7 +7,8 @@ import numpy as np
 import tensorflow as tf
 import time
 
-def init_model(model_path="model_unquant.tflite", labels_path="labels.txt"):
+# default using quantized model, change file name for unquantized model
+def init_model(model_path="model_quant.tflite", labels_path="labels.txt"):
     interpreter = tf.lite.Interpreter(model_path=model_path)
     interpreter.allocate_tensors()
     input_details = interpreter.get_input_details()
@@ -19,15 +20,28 @@ def init_model(model_path="model_unquant.tflite", labels_path="labels.txt"):
 def predict_frame(image, interpreter, input_details, output_details, labels):
     img = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     img = cv2.resize(img, (224, 224))
-    img = img.astype(np.float32) / 255.0
+    input_dtype = input_details[0]['dtype']
+    # Process image based on model's expected input type.
+    if input_dtype == np.uint8:
+        img = np.array(img, dtype=np.uint8)
+    else:
+        img = img.astype(np.float32) / 255.0
     img = np.expand_dims(img, axis=0)
+    
     interpreter.set_tensor(input_details[0]['index'], img)
     interpreter.invoke()
     predictions = interpreter.get_tensor(output_details[0]['index'])[0]
+    
+    # Dequantize predictions if necessary.
+    if output_details[0]['dtype'] == np.uint8:
+        scale, zero_point = output_details[0]['quantization']
+        predictions = (predictions - zero_point) * scale
+
     max_index = np.argmax(predictions)
     label = labels[max_index]
     category = label.split(' ', 1)[-1] if ' ' in label else label
-    confidence = predictions[max_index] * 100
+    # If input was quantized, the predictions have been scaled already.
+    confidence = predictions[max_index] * 100 if input_dtype != np.uint8 else predictions[max_index] * 100
     return category.lower(), confidence
 
 def align_roi(baseline, current):

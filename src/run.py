@@ -53,7 +53,7 @@ while True:
         current_roi_blurred = cv2.GaussianBlur(current_roi, (5, 5), 0)
         aligned_roi = align_roi(baseline_roi, current_roi_blurred)
         diff = cv2.absdiff(baseline_roi, aligned_roi)
-        diff = cv2.subtract(diff, np.full(diff.shape, 13, dtype=diff.dtype))
+        diff = cv2.subtract(diff, np.full(diff.shape, 15, dtype=diff.dtype))
         diff = cv2.medianBlur(diff, 5)
         mean_diff = np.mean(diff)
 

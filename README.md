@@ -4,17 +4,19 @@ This project demonstrates real-time object detection and classification using a 
 
 ## Project Structure
 
-Robotics Ecosmart Bin Project/
+ecosmart/
 ├── .gitignore
-├── README.md // This file
+├── README.md              // This file
 ├── requirements.txt
+├── statistics/            // Contains all model statistics and training logs
 └── src/
-├── run.py // Main program for real-time object detection
-├── test.py // Test script for evaluating the model on test images
-├── model.tflite // TensorFlow Lite model file
-├── labels.txt // Labels file with class mappings
-├── utils.py // Utility functions for model and image processing
-└── tray.py // Functions for tray rotation simulation
+    ├── run.py             // Main program for real-time object detection
+    ├── test.py            // Test script for evaluating the model on test images
+    ├── model.tflite       // (Deprecated) Original TensorFlow Lite model file
+    ├── model_quant.tflite // Quantized model for faster inference on embedded devices
+    ├── labels.txt         // Labels file with class mappings
+    ├── utils.py           // Utility functions for model initialization, prediction, preprocessing, and calibration
+    └── tray.py            // Functions for tray rotation simulation
 
 ## Setup
 
@@ -55,7 +57,7 @@ Robotics Ecosmart Bin Project/
 
 -   **Change Detection:**
     -   A difference image is computed between the aligned frame and the background.
-    -   A 5% offset (~13 on a 255 scale) is subtracted from the difference image to remove baseline noise.
+    -   A 5.8% offset (~15 on a 255 scale) is subtracted from the difference image to remove baseline noise.
     -   The image undergoes additional median blurring and thresholding (using Otsu's method) coupled with morphological operations.
     -   If the mean difference exceeds a threshold, the system extracts contours using an advanced statistical method (5th and 95th percentiles) to determine a single tight bounding box around the object.
 
@@ -100,5 +102,6 @@ A separate script (test.py) is provided under src/tests/:
 
 -   The model was trained for 30 epochs on a dataset consisting of 14,617 images.
 -   Note: Although Label ID 2 was initially "glass", the system now treats glass and plastic as the same category.
+-   Detailed model statistics, including performance metrics and training logs, are available in the statistics folder.
 
 Enjoy exploring the Robotics Ecosmart Bin Project!

@@ -98,7 +98,7 @@ A separate script (test.py) is provided under src/tests/:
 
 ## Training Notes
 
--   The model was trained for 50 epochs on a dataset consisting of 1500 images.
+-   The model was trained for 30 epochs on a dataset consisting of 14,617 images.
 -   Note: Although Label ID 2 was initially "glass", the system now treats glass and plastic as the same category.
 
 Enjoy exploring the Robotics Ecosmart Bin Project!

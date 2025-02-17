@@ -1,8 +1,7 @@
-"""
-Defines the graph, the shortest-path algorithm, and simulates tray rotation.
-"""
-
 import cv2
+
+# Global rotation step time in milliseconds. How long each 90deg rotation takes in simulation.
+ROTATION_STEP_TIME = 1000
 
 graph = {
     "plastic": ["paper", "food waste"],
@@ -24,7 +23,7 @@ def find_shortest_path(graph, start, target):
                 queue.append((neighbor, path + [neighbor]))
     return None
 
-def simulate_tray_rotation(target_compartment, frame):
+def simulate_tray_rotation(target_compartment, frame, rotation_delay=ROTATION_STEP_TIME):
     default = "plastic"
     path_to_target = find_shortest_path(graph, default, target_compartment)
     path_to_default = find_shortest_path(graph, target_compartment, default)
@@ -39,5 +38,5 @@ def simulate_tray_rotation(target_compartment, frame):
         cv2.putText(frame, step_msg, (10, 70),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
         cv2.imshow("Camera View", frame)
-        cv2.waitKey(1000)
+        cv2.waitKey(rotation_delay)
     print("Tray rotation complete. Returning to detection mode.")

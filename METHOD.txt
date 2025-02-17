@@ -1,0 +1,151 @@
+=====================================================================
+           Flowchart for Robotics Ecosmart Bin Project
+=====================================================================
+This flowchart explains how the system works on the Raspberry Pi. It is
+designed for a Year 12 student at Tiffin School and uses plain language.
+There are two separate paths: Development (Dev) Mode and Production (Prod) Mode.
+All technical steps are detailed so you can easily explain the code.
+
+---------------------------------------------------------------------
+1. SYSTEM INITIALISATION (Common to Both Modes)
+---------------------------------------------------------------------
+  [Start]
+     │
+     ▼
+  [Camera Initialisation]
+     - Open the camera using OpenCV.
+     - Check that the camera is accessible.
+     │
+     ▼
+  [Background Calibration]
+     - Capture several frames over CALIBRATION_DURATION seconds.
+     - Apply Gaussian blur to reduce noise.
+     - Compute the median of these frames to obtain a stable "baseline" image.
+     │
+     ▼
+  [Model Initialisation]
+     - Load the TFLite (quantised/unquantised) model.
+     - Allocate tensors and read predicted labels.
+     │
+     ▼
+  [Define Fixed Region of Interest (ROI)]
+     - Set ROI coordinates (roi_top, roi_left, roi_size).
+     - This region is used for object detection.
+---------------------------------------------------------------------
+
+                         MAIN FRAME PROCESSING LOOP
+                         
+     (This loop repeats for every captured frame)
+     
+  [Frame Capture & Pre-Processing]
+     │
+     ▼
+  [Flip Frame Horizontally]
+     │
+     ▼
+  [Draw Fixed ROI on the Frame]
+     │
+     ▼
+  [Extract and Blur Current ROI]
+     - Crop the frame to the ROI.
+     - Apply Gaussian blur.
+     │
+     ▼
+  [Align Current ROI with Baseline ROI]
+     - Use an image alignment method to reduce movement.
+     │
+     ▼
+  [Calculate Difference Image]
+     - Compute the absolute difference between the baseline and the current aligned ROI.
+     - Subtract a fixed offset (to remove minor differences).
+     - Apply median blur and compute the mean difference.
+     │
+     ▼
+  [Create Binary Image]
+     - Convert the difference image to grayscale.
+     - Apply Otsu’s thresholding to obtain a binary image.
+     - Perform morphological operations (opening and closing) to reduce noise.
+     │
+     ▼
+  [Contour Extraction & Bounding Box Calculation]
+     - Extract contours from the binary image.
+     - Filter out small contours (using min_contour_area).
+     - Calculate the 5th and 95th percentiles of the x and y coordinates.
+       (This gives a rough boundary around any large object.)
+     - Construct the bounding box and expand it by 25% to ensure the whole object is captured.
+     - Draw the bounding box on the frame.
+---------------------------------------------------------------------
+                   
+              SEPARATION: DEVELOPMENT MODE vs. PRODUCTION MODE
+---------------------------------------------------------------------
+
+              ┌─────────────┐  
+              │ Mode Check  │  (Is '-dev' flag set?)
+              └──────┬──────┘
+                     │
+         ┌───────────┴────────────┐
+         │                        │
+         ▼                        ▼
+--------------------------------------------------
+[Development (Dev) Mode]         [Production (Prod) Mode]
+--------------------------------------------------
+  • Start Cooldown Timer         • Start Cooldown Timer
+    (Wait until WAIT_TIME elapses)    (Wait until WAIT_TIME elapses)
+       │                                │
+       ▼                                ▼
+  [Extract Object ROI]             [Extract Object ROI]
+       │                                │
+       ▼                                ▼
+  [Resize ROI to Model Input]      [Resize ROI to a Target Shape]
+       - Resize using cv2.resize         - Resize using cv2.resize
+       │                                │
+       ▼                                ▼
+  [Prediction Step (Single       [Accumulate ROI Frames]
+   Frame)]                           • Append resized ROI frames
+       - Send the single frame           to a list (ACCUM_COUNT frames)
+         to the TFLite model               are collected
+       - Retrieve predicted label         │
+         and confidence                   ▼
+       │                       [Compute the Median ROI Image]
+       ▼                                - Use median of accumulated frames
+  [Display Predicted Label]               as the final input image
+       │                                │
+       ▼                                ▼
+  [If Valid, Proceed to]         [Prediction Step (Median Frame)]
+  [Tray Rotation Simulation]          - Send median ROI to TFLite model
+       │                                - Retrieve label and confidence
+       │                                │
+       ▼                                ▼
+  [End of Dev Cycle]             [Display Predicted Label]
+                                   │
+                                   ▼
+                             [Simulate Tray Rotation if Valid]
+---------------------------------------------------------------------
+
+              POST-PREDICTION & CYCLE CONTINUATION
+---------------------------------------------------------------------
+  [Tray Rotation Simulation] (Common to Both Modes)
+     - If the predicted label is one of: "plastic", "paper", "food waste", "metal"
+     - Simulate the tray rotation using computed paths.
+     - Display rotation messages on the frame.
+     │
+     ▼
+  [Background Recalibration (Prod Only)]
+     - In Production mode, re-calibrate the background after rotation to 
+       update the baseline ROI.
+     │
+     ▼
+  [Reset Flags and Continue Main Loop]
+     - Reset detection flags.
+     - Capture the next frame and repeat the process.
+     
+---------------------------------------------------------------------
+              ADDITIONAL FUNCTIONALITY & USER INTERFACE
+---------------------------------------------------------------------
+  - Frame Rate Calculation: 
+       • Compute FPS using the time difference between consecutive frames.
+       • Display the FPS in the top-right corner of the video window.
+  - Debug Information:
+       • Display countdown timers and accumulation status on the frame,
+         helping to understand when a prediction will occur.
+=====================================================================

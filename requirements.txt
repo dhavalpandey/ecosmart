@@ -9,7 +9,7 @@ gast==0.6.0
 google-pasta==0.2.0
 google_images_download==2.8.0
 grpcio==1.70.0
-h11==0.14.0
+h11==0.16.0
 h5py==3.12.1
 idna==3.10
 imageio==2.37.0

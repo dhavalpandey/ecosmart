@@ -34,7 +34,7 @@ pillow @ file:///private/var/folders/k1/30mswbxs7r1g6zwn8y4fyt500000gp/T/abs_85x
 protobuf==5.29.3
 Pygments==2.19.1
 PySocks==1.7.1
-requests==2.32.3
+requests==2.32.4
 rich==13.9.4
 scikit-image==0.25.1
 scipy==1.15.1
